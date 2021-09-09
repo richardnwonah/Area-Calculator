@@ -1,113 +1,154 @@
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(MyApp());
-}
+void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
-        primarySwatch: Colors.blue,
+      title: 'Area Calculator App',
+      home: Scaffold(
+        appBar: AppBar(
+          title: Text('Area Calculator'),
+        ),
+        body: AreaCalculator(),
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key? key, required this.title}) : super(key: key);
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
+class AreaCalculator extends StatefulWidget {
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _AreaCalculatorState createState() => _AreaCalculatorState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _AreaCalculatorState extends State<AreaCalculator> {
+  List<String> shapes = ['Rectangle', 'Triangle'];
+  late String currentShape;
+  String result = '0';
+  double width = 0;
+  double height = 0;
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+  final TextEditingController widthController = TextEditingController();
+  final TextEditingController heightController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    result = '0';
+    currentShape = 'Rectangle';
+    widthController.addListener(updateWidth);
+    heightController.addListener(updateHeight);
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
+    return Container(
+        margin: EdgeInsets.only(top: 15.0),
         child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
+            //dropdown
+            DropdownButton<String>(
+                value: currentShape,
+                items: shapes.map((String value) {
+                  return new DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(
+                      value,
+                      style: TextStyle(fontSize: 24.0),
+                    ),
+                  );
+                }).toList(),
+                onChanged: (shape) {
+                  setState(() {
+                    currentShape = shape!;
+                  });
+                }),
+            //width
+            AreaTextField(controller: widthController, hint: 'Width'),
+            //height
+            AreaTextField(controller: heightController, hint: 'Height'),
+            Container(
+              margin: EdgeInsets.all(15.0),
+              child: RaisedButton(
+                child: Text(
+                  'Calculate Area',
+                  style: TextStyle(fontSize: 18.0),
+                ),
+                //color: Colors.lightBlue,
+                onPressed: calculateArea,
+              ),
             ),
             Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headline4,
+              result,
+              style: TextStyle(
+                fontSize: 24.0,
+                color: Colors.green[700],
+              ),
             ),
           ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
-    );
+        ));
+  }
+
+  void calculateArea() {
+    double area;
+
+    if (currentShape == 'Rectangle') {
+      area = width * height;
+    } else if (currentShape == 'Triangle') {
+      area = width * height / 2;
+    } else {
+      area = 0;
+    }
+    setState(() {
+      result = 'The area is ' + area.toString();
+    });
+  }
+
+  void updateWidth() {
+    setState(() {
+      if (widthController.text != '') {
+        width = double.parse(widthController.text);
+      } else {
+        width = 0;
+      }
+    });
+  }
+
+  void updateHeight() {
+    setState(() {
+      if (heightController.text != '') {
+        height = double.parse(heightController.text);
+      } else {
+        height = 0;
+      }
+    });
+  }
+}
+
+class AreaTextField extends StatelessWidget {
+  AreaTextField({required this.controller, required this.hint});
+
+  final TextEditingController controller;
+  final String hint;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+        margin: EdgeInsets.all(15.0),
+        child: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          style: TextStyle(
+              color: Colors.green[700],
+              fontWeight: FontWeight.w300,
+              fontSize: 24.0),
+          decoration: InputDecoration(
+            prefixIcon: Icon(Icons.border_all),
+            filled: true,
+            fillColor: Colors.grey[300],
+            hintText: hint,
+          ),
+        ));
   }
 }
